@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1E63D6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="股小白" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="assets/icons/icon-152.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="assets/icons/icon-167.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>股小白 · 股票工作台</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app-root">
+
+  <!-- ── Header ── -->
+  <header id="app-header">
+    <h1 id="app-title">股小白</h1>
+    <span id="market-status"></span>
+    <span id="update-time"></span>
+  </header>
+
+  <!-- ── Tab Content ── -->
+  <main id="view"></main>
+
+  <!-- ── Bottom Tab Bar ── -->
+  <nav id="tabbar" role="tablist">
+    <button class="tab active" data-tab="dashboard" role="tab" aria-label="看板">看板</button>
+    <button class="tab" data-tab="watchlist" role="tab" aria-label="自选">自选</button>
+    <button class="tab" data-tab="signals" role="tab" aria-label="信号">信号</button>
+    <button class="tab" data-tab="news" role="tab" aria-label="资讯">资讯</button>
+    <button class="tab" data-tab="glossary" role="tab" aria-label="科普">科普</button>
+  </nav>
+
+  <!-- ── Modal Overlay (risk / A2HS guide) ── -->
+  <div id="modal-overlay" class="hidden">
+    <div id="modal-box">
+      <div id="modal-content"></div>
+      <div id="modal-actions"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Scripts (load order matters) -->
+<script src="js/store.js"></script>
+<script src="js/indicators.js"></script>
+<script src="js/signals.js"></script>
+<script src="js/data.js"></script>
+<script src="js/ui-dashboard.js"></script>
+<script src="js/ui-watchlist.js"></script>
+<script src="js/ui-signals.js"></script>
+<script src="js/ui-news.js"></script>
+<script src="js/ui-glossary.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
