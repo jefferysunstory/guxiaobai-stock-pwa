@@ -100,62 +100,51 @@ GXB.data = (function () {
     });
   }
 
-  /* ─────────────── News (best-effort) ───────── */
-  var FEEDS = [
-    { url: 'http://www.people.com.cn/rss/finance.xml', src: '人民网财经' },
-    { url: 'https://www.chinanews.com.cn/rss/fortune.xml', src: '中国新闻网' }
-  ];
-  var PROXIES = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?url='
-  ];
+  /* ─────────────── News (新浪财经 JSONP，国内直连) ───────── */
+  var NEWS_URL = 'https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2516&num=20&page=1';
 
   function fetchNews() {
-    var all = [];
-    var ps = FEEDS.map(function (f) {
-      return _tryFetchFeed(f.url, f.src).then(function (items) {
-        all = all.concat(items);
-      }).catch(function () { /* swallow */ });
-    });
+    return new Promise(function (resolve) {
+      var cbName = '_gxb_news_' + Date.now();
+      var done = false;
+      var script = document.createElement('script');
+      var timer = setTimeout(function () { finish([]); }, 10000);
 
-    return Promise.all(ps).then(function () {
-      all.sort(function (a, b) {
-        return (b.pubDate || '').localeCompare(a.pubDate || '');
-      });
-      var seen = {};
-      all = all.filter(function (it) {
-        var k = (it.title || '').slice(0, 18);
-        if (seen[k]) return false;
-        seen[k] = true;
-        return true;
-      });
-      return all.slice(0, 25);
+      function finish(items) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+        resolve(items || []);
+      }
+
+      window[cbName] = function (payload) {
+        finish(_mapSinaNews(payload));
+      };
+      script.onerror = function () { finish([]); };
+      script.src = NEWS_URL + '&callback=' + cbName;
+      document.head.appendChild(script);
     });
   }
 
-  function _tryFetchFeed(feedUrl, source) {
-    var chain = PROXIES.map(function (px) {
-      return function () {
-        return fetch(px + encodeURIComponent(feedUrl), { signal: AbortSignal.timeout(10000) })
-          .then(function (r) { return r.text(); })
-          .then(function (txt) { return _parseRSS(txt, source); });
+  function _mapSinaNews(payload) {
+    var data = payload && payload.result && payload.result.data;
+    if (!data || !Array.isArray(data)) return [];
+    return data.slice(0, 25).map(function (it) {
+      return {
+        title: it.title || '',
+        link: it.url || '',
+        pubDate: it.ctime ? _tsToISO(it.ctime) : '',
+        description: (it.intro || '').slice(0, 90),
+        source: '新浪财经'
       };
     });
-    return chain.reduce(function (p, fn) { return p.catch(fn); }, Promise.reject());
   }
 
-  function _parseRSS(xml, source) {
-    var doc = new DOMParser().parseFromString(xml, 'text/xml');
-    var items = doc.querySelectorAll('item'), out = [];
-    items.forEach(function (el) {
-      var t = _q(el, 'title'), lnk = _q(el, 'link'),
-        pd = _q(el, 'pubDate'), desc = _q(el, 'description');
-      if (t) out.push({ title: t, link: lnk, pubDate: pd, description: desc, source: source });
-    });
-    return out;
-  }
-  function _q(el, tag) {
-    var n = el.querySelector(tag); return n ? (n.textContent || '').trim() : '';
+  function _tsToISO(sec) {
+    var d = new Date(sec * 1000);
+    return isNaN(d.getTime()) ? '' : d.toISOString();
   }
 
   /* ─────────────── Trading hours ────────────── */
